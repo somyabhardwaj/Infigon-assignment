@@ -13,15 +13,15 @@ import { ErrorState } from '../ErrorState';
 import { EmptyState } from '../EmptyState';
 import { useFavorites } from '../../hooks/useFavorites';
 import { Pagination } from './Pagination';
-
-interface ProductListProps {
-    initialProducts: Product[];
-    initialCategories: Category[];
-}
+import { fetchProducts, fetchCategories } from '@/lib/api';
 
 const ITEMS_PER_PAGE = 12;
 
-export function ProductList({ initialProducts, initialCategories }: ProductListProps) {
+export function ProductList() {
+    const [products, setProducts] = useState<Product[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
@@ -29,9 +29,31 @@ export function ProductList({ initialProducts, initialCategories }: ProductListP
     const [currentPage, setCurrentPage] = useState(1);
     const { favorites, toggleFavorite, isFavorite, isLoaded } = useFavorites();
 
+    // Fetch data on mount
+    useEffect(() => {
+        async function loadData() {
+            try {
+                setIsLoading(true);
+                setError(null);
+                const [productsData, categoriesData] = await Promise.all([
+                    fetchProducts(),
+                    fetchCategories(),
+                ]);
+                setProducts(productsData);
+                setCategories(categoriesData);
+            } catch (err) {
+                console.error('Error loading data:', err);
+                setError(err instanceof Error ? err.message : 'Failed to load products');
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        loadData();
+    }, []);
+
     // Filter and sort products
     const filteredProducts = useMemo(() => {
-        let filtered = initialProducts;
+        let filtered = products;
 
         // Filter by search query
         if (searchQuery) {
@@ -58,7 +80,7 @@ export function ProductList({ initialProducts, initialCategories }: ProductListP
         }
 
         return filtered;
-    }, [initialProducts, searchQuery, selectedCategory, showFavoritesOnly, favorites, sortOption]);
+    }, [products, searchQuery, selectedCategory, showFavoritesOnly, favorites, sortOption]);
 
     // Reset to page 1 when filters change
     useEffect(() => {
@@ -71,9 +93,31 @@ export function ProductList({ initialProducts, initialCategories }: ProductListP
     const endIndex = startIndex + ITEMS_PER_PAGE;
     const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
 
-    // Show loading skeleton until favorites are loaded
-    if (!isLoaded) {
+    // Show loading skeleton until data or favorites are loaded
+    if (isLoading || !isLoaded) {
         return <LoadingGrid />;
+    }
+
+    // Show error state if data failed to load
+    if (error) {
+        return (
+            <ErrorState
+                message={error}
+                onRetry={() => {
+                    setError(null);
+                    setIsLoading(true);
+                    Promise.all([fetchProducts(), fetchCategories()])
+                        .then(([productsData, categoriesData]) => {
+                            setProducts(productsData);
+                            setCategories(categoriesData);
+                        })
+                        .catch((err) => {
+                            setError(err instanceof Error ? err.message : 'Failed to load products');
+                        })
+                        .finally(() => setIsLoading(false));
+                }}
+            />
+        );
     }
 
     return (
@@ -91,7 +135,7 @@ export function ProductList({ initialProducts, initialCategories }: ProductListP
                     {/* Category Filter and Actions */}
                     <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
                         <CategoryFilter
-                            categories={initialCategories}
+                            categories={categories}
                             selectedCategory={selectedCategory}
                             onSelectCategory={setSelectedCategory}
                         />

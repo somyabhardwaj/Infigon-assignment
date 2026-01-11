@@ -5,17 +5,8 @@ const FETCH_TIMEOUT = 10000; // 10 seconds
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
 
-// Fetch configuration for server-side rendering
+// Fetch configuration - simplified for client-side use
 const getFetchOptions = (signal?: AbortSignal) => ({
-    cache: 'no-store' as const,
-    next: { revalidate: 0 },
-    headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Referer': 'https://fakestoreapi.com/',
-    },
     ...(signal && { signal }),
 });
 

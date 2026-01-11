@@ -1,17 +1,90 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, Heart, Star } from 'lucide-react';
 import { Product } from '@/types/types';
 import { useFavorites } from '../../hooks/useFavorites';
+import { fetchProduct } from '@/lib/api';
+import { ErrorState } from '../ErrorState';
+import { LoadingSkeleton } from './LoadingSkeleton';
 
 interface ProductDetailProps {
-    product: Product;
+    productId: number;
 }
 
-export function ProductDetailClient({ product }: ProductDetailProps) {
+export function ProductDetailClient({ productId }: ProductDetailProps) {
+    const [product, setProduct] = useState<Product | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const { isFavorite, toggleFavorite } = useFavorites();
+
+    useEffect(() => {
+        async function loadProduct() {
+            try {
+                setIsLoading(true);
+                setError(null);
+                const productData = await fetchProduct(productId);
+                setProduct(productData);
+            } catch (err) {
+                console.error('Error loading product:', err);
+                setError(err instanceof Error ? err.message : 'Failed to load product');
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        loadProduct();
+    }, [productId]);
+
+    if (isLoading) {
+        return (
+            <div className="container mx-auto px-4 py-8">
+                <Link
+                    href="/"
+                    className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6 transition-colors"
+                >
+                    <ArrowLeft className="w-5 h-5 text-current" />
+                    <span>Back to Products</span>
+                </Link>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <LoadingSkeleton />
+                    <LoadingSkeleton />
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="container mx-auto px-4 py-8">
+                <Link
+                    href="/"
+                    className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6 transition-colors"
+                >
+                    <ArrowLeft className="w-5 h-5 text-current" />
+                    <span>Back to Products</span>
+                </Link>
+                <ErrorState
+                    message={error}
+                    onRetry={() => {
+                        setError(null);
+                        setIsLoading(true);
+                        fetchProduct(productId)
+                            .then(setProduct)
+                            .catch((err) => {
+                                setError(err instanceof Error ? err.message : 'Failed to load product');
+                            })
+                            .finally(() => setIsLoading(false));
+                    }}
+                />
+            </div>
+        );
+    }
+
+    if (!product) {
+        return null;
+    }
 
     return (
         <div className="container mx-auto px-4 py-8">
