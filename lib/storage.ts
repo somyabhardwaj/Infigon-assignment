@@ -1,41 +1,56 @@
-import { Product, Category } from '@/types/types';
-const API_BASE_URL = 'https://fakestoreapi.com';
+import { FavoritesState } from '@/types/types';
 
-// Fetch all products from the FakeStore API
-export async function fetchProducts(): Promise<Product[]> {
-    const response = await fetch(`${API_BASE_URL}/products`, {
-        cache: 'no-store', 
-    });
+const FAVORITES_STORAGE_KEY = 'product-favorites';
 
-    if (!response.ok) {
-        throw new Error(`Failed to fetch products: ${response.statusText}`);
+/**
+ * Get favorites from localStorage
+ */
+export function getFavorites(): FavoritesState {
+    if (typeof window === 'undefined') {
+        return new Set();
     }
 
-    return response.json();
+    try {
+        const stored = localStorage.getItem(FAVORITES_STORAGE_KEY);
+        if (!stored) {
+            return new Set();
+        }
+        const favoritesArray = JSON.parse(stored) as number[];
+        return new Set(favoritesArray);
+    } catch (error) {
+        console.error('Error reading favorites from localStorage:', error);
+        return new Set();
+    }
 }
 
-// Fetch a single product by ID
-export async function fetchProduct(id: number): Promise<Product> {
-    const response = await fetch(`${API_BASE_URL}/products/${id}`, {
-        cache: 'no-store',
-    });
-
-    if (!response.ok) {
-        throw new Error(`Failed to fetch product: ${response.statusText}`);
+/**
+ * Save favorites to localStorage
+ */
+function saveFavorites(favorites: FavoritesState): void {
+    if (typeof window === 'undefined') {
+        return;
     }
 
-    return response.json();
+    try {
+        const favoritesArray = Array.from(favorites);
+        localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favoritesArray));
+    } catch (error) {
+        console.error('Error saving favorites to localStorage:', error);
+    }
 }
 
-// Fetch all available categories
-export async function fetchCategories(): Promise<Category[]> {
-    const response = await fetch(`${API_BASE_URL}/products/categories`, {
-        cache: 'no-store',
-    });
-
-    if (!response.ok) {
-        throw new Error(`Failed to fetch categories: ${response.statusText}`);
+/**
+ * Toggle favorite status for a product
+ */
+export function toggleFavorite(productId: number, currentFavorites: FavoritesState): FavoritesState {
+    const newFavorites = new Set(currentFavorites);
+    
+    if (newFavorites.has(productId)) {
+        newFavorites.delete(productId);
+    } else {
+        newFavorites.add(productId);
     }
-
-    return response.json();
+    
+    saveFavorites(newFavorites);
+    return newFavorites;
 }

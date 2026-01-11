@@ -9,7 +9,7 @@ interface ErrorStateProps {
 
 export function ErrorState({message ='Something went wrong. Please try again.', onRetry}:ErrorStateProps){
    return (
-       <div className='flex flex-col items-center justifycenter py-16 px-4'>
+       <div className='flex flex-col items-center justify-center py-16 px-4'>
       <div className='bg-red-50 dark:bg-red-900/20 rounded-full p-4 mb-4'>
       <AlertCircle className='w-12 h-12 text-red-600 dark:text-red-400'/>
       </div>
