@@ -27,26 +27,20 @@ export function ProductList() {
     const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
     const [sortOption, setSortOption] = useState<SortOption>('none');
     const [currentPage, setCurrentPage] = useState(1);
-    const { favorites, toggleFavorite, isFavorite, isLoaded } = useFavorites();
+    const { favorites, toggleFavorite, isFavorite } = useFavorites();
 
     // Fetch data on mount
     useEffect(() => {
         async function loadData() {
-            try {
-                setIsLoading(true);
-                setError(null);
-                const [productsData, categoriesData] = await Promise.all([
-                    fetchProducts(),
-                    fetchCategories(),
-                ]);
-                setProducts(productsData);
-                setCategories(categoriesData);
-            } catch (err) {
-                console.error('Error loading data:', err);
-                setError(err instanceof Error ? err.message : 'Failed to load products');
-            } finally {
-                setIsLoading(false);
-            }
+            setIsLoading(true);
+            setError(null);
+            const [productsData, categoriesData] = await Promise.all([
+                fetchProducts(),
+                fetchCategories(),
+            ]);
+            setProducts(productsData);
+            setCategories(categoriesData);
+            setIsLoading(false);
         }
         loadData();
     }, []);
@@ -93,8 +87,7 @@ export function ProductList() {
     const endIndex = startIndex + ITEMS_PER_PAGE;
     const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
 
-    // Show loading skeleton until data or favorites are loaded
-    if (isLoading || !isLoaded) {
+    if (isLoading) {
         return <LoadingGrid />;
     }
 
@@ -103,18 +96,16 @@ export function ProductList() {
         return (
             <ErrorState
                 message={error}
-                onRetry={() => {
+                onRetry={async () => {
                     setError(null);
                     setIsLoading(true);
-                    Promise.all([fetchProducts(), fetchCategories()])
-                        .then(([productsData, categoriesData]) => {
-                            setProducts(productsData);
-                            setCategories(categoriesData);
-                        })
-                        .catch((err) => {
-                            setError(err instanceof Error ? err.message : 'Failed to load products');
-                        })
-                        .finally(() => setIsLoading(false));
+                    const [productsData, categoriesData] = await Promise.all([
+                        fetchProducts(),
+                        fetchCategories(),
+                    ]);
+                    setProducts(productsData);
+                    setCategories(categoriesData);
+                    setIsLoading(false);
                 }}
             />
         );

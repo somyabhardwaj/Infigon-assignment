@@ -22,17 +22,11 @@ export function ProductDetailClient({ productId }: ProductDetailProps) {
 
     useEffect(() => {
         async function loadProduct() {
-            try {
-                setIsLoading(true);
-                setError(null);
-                const productData = await fetchProduct(productId);
-                setProduct(productData);
-            } catch (err) {
-                console.error('Error loading product:', err);
-                setError(err instanceof Error ? err.message : 'Failed to load product');
-            } finally {
-                setIsLoading(false);
-            }
+            setIsLoading(true);
+            setError(null);
+            const productData = await fetchProduct(productId);
+            setProduct(productData);
+            setIsLoading(false);
         }
         loadProduct();
     }, [productId]);
@@ -67,15 +61,12 @@ export function ProductDetailClient({ productId }: ProductDetailProps) {
                 </Link>
                 <ErrorState
                     message={error}
-                    onRetry={() => {
+                    onRetry={async () => {
                         setError(null);
                         setIsLoading(true);
-                        fetchProduct(productId)
-                            .then(setProduct)
-                            .catch((err) => {
-                                setError(err instanceof Error ? err.message : 'Failed to load product');
-                            })
-                            .finally(() => setIsLoading(false));
+                        const productData = await fetchProduct(productId);
+                        setProduct(productData);
+                        setIsLoading(false);
                     }}
                 />
             </div>

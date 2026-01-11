@@ -3,17 +3,11 @@
 import { useState, useEffect } from 'react';
 import { getFavorites, toggleFavorite as toggleFavoriteStorage } from '@/lib/storage';
 
-/**
- * Custom hook for managing favorites with localStorage persistence
- */
 export function useFavorites() {
     const [favorites, setFavorites] = useState<Set<number>>(new Set());
-    const [isLoaded, setIsLoaded] = useState(false);
 
-    // Load favorites from localStorage on mount
     useEffect(() => {
         setFavorites(getFavorites());
-        setIsLoaded(true);
     }, []);
 
     const toggleFavorite = (productId: number) => {
@@ -21,14 +15,9 @@ export function useFavorites() {
         setFavorites(newFavorites);
     };
 
-    const isFavorite = (productId: number): boolean => {
+    const isFavorite = (productId: number) => {
         return favorites.has(productId);
     };
 
-    return {
-        favorites,
-        toggleFavorite,
-        isFavorite,
-        isLoaded,
-    };
+    return { favorites, toggleFavorite, isFavorite };
 }
