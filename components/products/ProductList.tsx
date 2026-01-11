@@ -114,8 +114,8 @@ export function ProductList() {
     return (
         <div className="space-y-6">
             {/* Filters Section */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-                <div className="space-y-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
+                <div className="space-y-3 sm:space-y-4">
                     {/* Search Bar */}
                     <SearchBar
                         value={searchQuery}
@@ -124,14 +124,14 @@ export function ProductList() {
                     />
 
                     {/* Category Filter and Actions */}
-                    <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+                    <div className="flex flex-col gap-3 sm:gap-4">
                         <CategoryFilter
                             categories={categories}
                             selectedCategory={selectedCategory}
                             onSelectCategory={setSelectedCategory}
                         />
 
-                        <div className="flex flex-wrap gap-3 items-center">
+                        <div className="flex flex-wrap gap-2 sm:gap-3 items-center">
                             <FavoritesToggle
                                 showFavoritesOnly={showFavoritesOnly}
                                 onToggle={() => setShowFavoritesOnly(!showFavoritesOnly)}
