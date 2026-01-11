@@ -2,6 +2,9 @@ import { fetchProducts, fetchCategories } from '@/lib/api';
 import { ProductList } from '@/components/products/ProductList';
 import { ErrorState } from '@/components/ErrorState';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function HomePage() {
     try {
         // Fetch data on the server
@@ -28,6 +31,7 @@ export default async function HomePage() {
             </div>
         );
     } catch (error) {
+        console.error('HomePage error:', error);
         return (
             <div className="container mx-auto px-4 py-8">
                 <ErrorState

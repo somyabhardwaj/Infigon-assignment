@@ -45,6 +45,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         const product = await fetchProduct(productId);
         return <ProductDetailClient product={product} />;
     } catch (error) {
+        console.error('ProductDetailPage error:', error);
         return (
             <div className="container mx-auto px-4 py-8">
                 <ErrorState
