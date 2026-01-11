@@ -12,17 +12,21 @@ import { LoadingGrid } from './LoadingSkeleton';
 import { ErrorState } from '../ErrorState';
 import { EmptyState } from '../EmptyState';
 import { useFavorites } from '../../hooks/useFavorites';
+import { Pagination } from './Pagination';
 
 interface ProductListProps {
     initialProducts: Product[];
     initialCategories: Category[];
 }
 
+const ITEMS_PER_PAGE = 12;
+
 export function ProductList({ initialProducts, initialCategories }: ProductListProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
     const [sortOption, setSortOption] = useState<SortOption>('none');
+    const [currentPage, setCurrentPage] = useState(1);
     const { favorites, toggleFavorite, isFavorite, isLoaded } = useFavorites();
 
     // Filter and sort products
@@ -55,6 +59,17 @@ export function ProductList({ initialProducts, initialCategories }: ProductListP
 
         return filtered;
     }, [initialProducts, searchQuery, selectedCategory, showFavoritesOnly, favorites, sortOption]);
+
+    // Reset to page 1 when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, selectedCategory, showFavoritesOnly, sortOption]);
+
+    // Calculate pagination
+    const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
 
     // Show loading skeleton until favorites are loaded
     if (!isLoaded) {
@@ -93,25 +108,29 @@ export function ProductList({ initialProducts, initialCategories }: ProductListP
                 </div>
             </div>
 
-            {/* Results Count */}
-            <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Showing <span className="font-semibold text-gray-900 dark:text-white">{filteredProducts.length}</span> products
-                </p>
-            </div>
-
             {/* Products Grid */}
             {filteredProducts.length > 0 ? (
-                <ProductGrid>
-                    {filteredProducts.map((product) => (
-                        <ProductCard
-                            key={product.id}
-                            product={product}
-                            isFavorite={isFavorite(product.id)}
-                            onToggleFavorite={toggleFavorite}
-                        />
-                    ))}
-                </ProductGrid>
+                <>
+                    <ProductGrid>
+                        {paginatedProducts.map((product) => (
+                            <ProductCard
+                                key={product.id}
+                                product={product}
+                                isFavorite={isFavorite(product.id)}
+                                onToggleFavorite={toggleFavorite}
+                            />
+                        ))}
+                    </ProductGrid>
+
+                    {/* Pagination */}
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                        totalItems={filteredProducts.length}
+                        itemsPerPage={ITEMS_PER_PAGE}
+                    />
+                </>
             ) : (
                 <EmptyState type={showFavoritesOnly ? 'no-favorites' : 'no-results'} />
             )}
